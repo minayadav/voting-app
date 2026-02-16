@@ -1,0 +1,56 @@
+Create a Docker-ready microservices voting application.
+
+GOAL:
+A voting app that runs fully via Docker Compose.
+
+SERVICES:
+1) voting-app
+- Python Flask app
+- Simple voting page with two buttons
+- Sends vote to Redis
+- Runs on port 5000
+
+2) result-app
+- Node.js app
+- Reads results from PostgreSQL
+- Displays vote counts
+- Runs on port 5001
+
+3) worker
+- Node.js background service
+- Reads votes from Redis
+- Updates PostgreSQL
+
+4) redis
+- Official Redis image
+
+5) db
+- PostgreSQL official image
+
+REQUIREMENTS:
+
+- Each service in its own folder
+- Provide working minimal code (not placeholders)
+- Provide Dockerfile for each custom service
+- Provide docker-compose.yml connecting all services
+- Use environment variables
+- Create database table automatically
+- Add basic logging
+
+OUTPUT:
+
+- Full folder structure
+- All source code
+- All Dockerfiles
+- docker-compose.yml
+- README with run steps
+
+FINAL GOAL:
+
+I should be able to run:
+docker-compose up --build
+
+Then:
+- Open voting page
+- Submit votes
+- Open results page to see counts

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - Cats vs Dogs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 700px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+        
+        .results {
+            margin-bottom: 30px;
+        }
+        
+        .result-item {
+            margin-bottom: 30px;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .result-label {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .result-count {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .progress-bar {
+            height: 40px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .progress-fill.cats {
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .progress-fill.dogs {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .total {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 2px solid #eee;
+            font-size: 1.2em;
+            color: #666;
+        }
+        
+        .total strong {
+            color: #333;
+            font-size: 1.3em;
+        }
+        
+        .refresh-info {
+            text-align: center;
+            margin-top: 20px;
+            color: #999;
+            font-size: 0.9em;
+        }
+        
+        .voting-link {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #eee;
+            text-align: center;
+        }
+        
+        .voting-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        
+        .voting-link a:hover {
+            color: #764ba2;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Voting Results</h1>
+        <p class="subtitle">Real-time vote counts</p>
+        
+        <div id="results" class="results">
+            <div class="loading">Loading results...</div>
+        </div>
+        
+        <div class="refresh-info">
+            🔄 Auto-refreshing every 2 seconds
+        </div>
+        
+        <div class="voting-link">
+            <a href="http://localhost:5000" target="_blank">🗳️ Cast Your Vote</a>
+        </div>
+    </div>
+    
+    <script>
+        function updateResults() {
+            fetch('/results')
+                .then(response => response.json())
+                .then(data => {
+                    const total = data.cats + data.dogs;
+                    const catsPercent = total > 0 ? (data.cats / total * 100).toFixed(1) : 0;
+                    const dogsPercent = total > 0 ? (data.dogs / total * 100).toFixed(1) : 0;
+                    
+                    const resultsHTML = `
+                        <div class="result-item">
+                            <div class="result-header">
+                                <span class="result-label">🐱 Cats</span>
+                                <span class="result-count">${data.cats}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill cats" style="width: ${catsPercent}%">
+                                    ${catsPercent}%
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="result-item">
+                            <div class="result-header">
+                                <span class="result-label">🐶 Dogs</span>
+                                <span class="result-count">${data.dogs}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill dogs" style="width: ${dogsPercent}%">
+                                    ${dogsPercent}%
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="total">
+                            Total Votes: <strong>${total}</strong>
+                        </div>
+                    `;
+                    
+                    document.getElementById('results').innerHTML = resultsHTML;
+                })
+                .catch(error => {
+                    console.error('Error fetching results:', error);
+                    document.getElementById('results').innerHTML = 
+                        '<div class="loading">Error loading results. Retrying...</div>';
+                });
+        }
+        
+        // Initial load
+        updateResults();
+        
+        // Refresh every 2 seconds
+        setInterval(updateResults, 2000);
+    </script>
+</body>
+</html>
