@@ -1,0 +1,119 @@
+name: Deploy to Local Docker Desktop
+
+on:
+  push:
+    branches: 
+      - main
+  workflow_dispatch:  # Manual trigger option
+
+jobs:
+  deploy-to-local:
+    name: Deploy to Local Docker Desktop
+    runs-on: self-hosted  # This will run on YOUR computer!
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐳 Verify Docker is running
+        run: |
+          docker --version
+          docker ps
+      
+      - name: 🛑 Stop existing containers
+        run: |
+          docker-compose down
+        continue-on-error: true
+      
+      - name: 🧹 Clean up old images (optional)
+        run: |
+          docker system prune -f
+        continue-on-error: true
+      
+      - name: 🏗️ Build Docker images
+        run: |
+          docker-compose build --no-cache
+      
+      - name: 🚀 Start containers
+        run: |
+          docker-compose up -d
+      
+      - name: ⏳ Wait for services to be ready
+        run: |
+          Start-Sleep -Seconds 30
+      
+      - name: 🏥 Health check - Voting App
+        run: |
+          $maxAttempts = 5
+          $attempt = 0
+          $success = $false
+          
+          while ($attempt -lt $maxAttempts -and -not $success) {
+            try {
+              $response = Invoke-WebRequest -Uri http://localhost:5000/health -UseBasicParsing -TimeoutSec 5
+              if ($response.StatusCode -eq 200) {
+                $success = $true
+                Write-Host "✅ Voting app is healthy"
+              }
+            } catch {
+              $attempt++
+              Write-Host "Attempt $attempt failed, retrying..."
+              Start-Sleep -Seconds 5
+            }
+          }
+          
+          if (-not $success) {
+            Write-Error "Voting app health check failed after $maxAttempts attempts"
+            exit 1
+          }
+      
+      - name: 🏥 Health check - Result App
+        run: |
+          $maxAttempts = 5
+          $attempt = 0
+          $success = $false
+          
+          while ($attempt -lt $maxAttempts -and -not $success) {
+            try {
+              $response = Invoke-WebRequest -Uri http://localhost:5001/health -UseBasicParsing -TimeoutSec 5
+              if ($response.StatusCode -eq 200) {
+                $success = $true
+                Write-Host "✅ Result app is healthy"
+              }
+            } catch {
+              $attempt++
+              Write-Host "Attempt $attempt failed, retrying..."
+              Start-Sleep -Seconds 5
+            }
+          }
+          
+          if (-not $success) {
+            Write-Error "Result app health check failed after $maxAttempts attempts"
+            exit 1
+          }
+      
+      - name: 📊 Show running containers
+        run: |
+          docker-compose ps
+      
+      - name: 📝 Show deployment info
+        run: |
+          Write-Host "========================================="
+          Write-Host "✅ Deployment Completed Successfully!"
+          Write-Host "========================================="
+          Write-Host ""
+          Write-Host "🌐 Access your application:"
+          Write-Host "   Voting App:  http://localhost:5000"
+          Write-Host "   Result App:  http://localhost:5001"
+          Write-Host ""
+          Write-Host "📊 Container Status:"
+          docker-compose ps
+          Write-Host ""
+          Write-Host "📝 Recent logs:"
+          docker-compose logs --tail=10
+      
+      - name: 🎉 Deployment notification
+        run: |
+          Write-Host "🎉 Your voting app is now running on your local Docker Desktop!"
+          Write-Host "Deployed from commit: ${{ github.sha }}"
+          Write-Host "Deployed by: ${{ github.actor }}"
